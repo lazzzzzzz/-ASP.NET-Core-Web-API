@@ -2,17 +2,19 @@
 using Xunit;
 using MetricsManager.Controllers;
 using Microsoft.AspNetCore.Mvc;
-
+using Moq;
+using Microsoft.Extensions.Logging;
 
 namespace MetricsManagerTests
 {
     public class HddMetricsControllerUnitTests
     {
         private HddMetricsController controller;
-
+        private Mock<ILogger<HddMetricsController>> mockLogger;
         public HddMetricsControllerUnitTests()
         {
-            controller = new HddMetricsController();
+            mockLogger = new Mock<ILogger<HddMetricsController>>();
+            controller = new HddMetricsController(mockLogger.Object);
         }
         [Fact]
         public void GetMetricsFromAgentTest()
