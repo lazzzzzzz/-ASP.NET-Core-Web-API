@@ -3,16 +3,19 @@ using Xunit;
 using MetricsManager.Controllers;
 using MetricsManager;
 using Microsoft.AspNetCore.Mvc;
+using Moq;
+using Microsoft.Extensions.Logging;
 
 namespace MetricsManagerTests
 {
     public class AgentsControllerUnitTests
     {
         private AgentsController controller;
-
+        private Mock<ILogger<AgentsController>> mockLogger;
         public AgentsControllerUnitTests()
         {
-            controller = new AgentsController();
+            mockLogger = new Mock<ILogger<AgentsController>>();
+            controller = new AgentsController(mockLogger.Object);
         }
         [Fact]
         public void RegisterAgentTest()
