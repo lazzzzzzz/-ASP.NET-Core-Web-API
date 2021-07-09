@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Data.SQLite;
+using Dapper;
 
 namespace MetricsAgent.DAL
 {
@@ -13,48 +14,45 @@ namespace MetricsAgent.DAL
     public class NetworkMetricsRepository : INetworkMetricsRepository
     {
         private const string ConnectionString = "Data Source=metrics.db;Version=3;Pooling=true;Max Pool Size=100;";
+        public NetworkMetricsRepository()
+        {
+            SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
+        }
         public void Create(NetworkMetric item)
         {
-            using var connection = new SQLiteConnection(ConnectionString);
-            connection.Open();
-            using var cmd = new SQLiteCommand(connection);
-            cmd.CommandText = "INSERT INTO networkmetrics(value, time) VALUES(@value, @time)";
-            cmd.Parameters.AddWithValue("@value", item.Value);
-            cmd.Parameters.AddWithValue("@time", item.Time.ToUnixTimeSeconds());
-            cmd.Prepare();
-            cmd.ExecuteNonQuery();
+            using (var connection = new SQLiteConnection(ConnectionString))
+            {
+                connection.Execute("INSERT INTO networkmetrics(value, time) VALUES(@value, @time)",
+                    new
+                    {
+                        value = item.Value,
+                        time = item.Time.ToUnixTimeSeconds()
+                    });
+            };
         }
 
         public IList<NetworkMetric> GetByTimePeriod(DateTimeOffset fromTime, DateTimeOffset toTime)
         {
-            using var connection = new SQLiteConnection(ConnectionString);
-            connection.Open();
-            using var cmd = new SQLiteCommand(connection);
-            var returnArray = new List<NetworkMetric>();
-            cmd.CommandText = "SELECT * FROM networkmetrics WHERE time Between @time1 AND @time2";
-            cmd.Parameters.AddWithValue("@time1", fromTime.ToUnixTimeSeconds());
-            cmd.Parameters.AddWithValue("@time2", toTime.ToUnixTimeSeconds());
-            using (SQLiteDataReader reader = cmd.ExecuteReader())
+            using (var connection = new SQLiteConnection(ConnectionString))
             {
-                while (reader.Read())
-                {
-                    returnArray.Add(new NetworkMetric
-                    {
-                        Id = reader.GetInt32(0),
-                        Value = reader.GetInt32(1),
-                        Time = DateTimeOffset.FromUnixTimeSeconds(reader.GetInt32(2))
-                    });
-                }
-                return returnArray;
+                return connection.Query<NetworkMetric>("SELECT Id, Time, Value FROM rammetrics WHERE time Between @time1 AND @time2",
+                    new { time1 = fromTime, time2 = toTime }).ToList();
             }
         }
         public IList<NetworkMetric> GetAll()
         {
-            return new List<NetworkMetric>();
+            using (var connection = new SQLiteConnection(ConnectionString))
+            {
+                return connection.Query<NetworkMetric>("SELECT Id, Time, Value FROM networkmetrics").ToList();
+            }
         }
         public NetworkMetric GetById(int id)
         {
-            return new NetworkMetric();
+            using (var connection = new SQLiteConnection(ConnectionString))
+            {
+                return connection.QuerySingle<NetworkMetric>("SELECT Id, Time, Value FROM networkmetrics WHERE id=@id",
+                    new { id = id });
+            }
         }
     }
 }

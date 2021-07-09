@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using MetricsAgent.DAL;
 using MetricsAgent.Requests;
 using MetricsAgent.Responses;
-
+using AutoMapper;
 namespace MetricsAgent.Controllers
 {
     [Route("api/metrics/hdd")]
@@ -17,9 +17,11 @@ namespace MetricsAgent.Controllers
     {
         private readonly ILogger<HddMetricsController> _logger;
         private IHddMetricsRepository repository;
-        public HddMetricsController(ILogger<HddMetricsController> logger,IHddMetricsRepository repository)
+        private readonly IMapper _mapper;
+        public HddMetricsController(ILogger<HddMetricsController> logger,IHddMetricsRepository repository, IMapper mapper)
         {
             this.repository = repository;
+            _mapper = mapper;
             _logger = logger;
             _logger.LogDebug(1, "NLog встроен в HddMetricsController");
         }
@@ -35,7 +37,7 @@ namespace MetricsAgent.Controllers
             };
             foreach (var metric in metrics)
             {
-                response.Metrics.Add(new HddMetricDto { Time = metric.Time, Value = metric.Value, Id = metric.Id });
+                response.Metrics.Add(_mapper.Map<HddMetricDto>(metric));
             }
             return Ok(response);
         }

@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using MetricsAgent.DAL;
 using MetricsAgent.Requests;
 using MetricsAgent.Responses;
-
+using AutoMapper;
 namespace MetricsAgent.Controllers
 {
     [Route("api/metrics/ram")]
@@ -17,9 +17,11 @@ namespace MetricsAgent.Controllers
     {
         private readonly ILogger<RamMetricsController> _logger;
         private IRamMetricsRepository repository;
-        public RamMetricsController(ILogger<RamMetricsController> logger,IRamMetricsRepository repository)
+        private readonly IMapper _mapper;
+        public RamMetricsController(ILogger<RamMetricsController> logger,IRamMetricsRepository repository, IMapper mapper)
         {
             this.repository = repository;
+            _mapper = mapper;
             _logger = logger;
             _logger.LogDebug(1, "NLog встроен в RamMetricsController");
         }
@@ -35,7 +37,7 @@ namespace MetricsAgent.Controllers
             };
             foreach (var metric in metrics)
             {
-                response.Metrics.Add(new RamMetricDto { Time = metric.Time, Value = metric.Value, Id = metric.Id });
+                response.Metrics.Add(_mapper.Map<RamMetricDto>(metric));
             }
             return Ok(response);
         }
