@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using MetricsAgent.DAL;
 using MetricsAgent.Requests;
 using MetricsAgent.Responses;
+using AutoMapper;
 
 namespace MetricsAgent.Controllers
 {
@@ -17,10 +18,11 @@ namespace MetricsAgent.Controllers
     {
         private readonly ILogger<CpuMetricsController> _logger;
         private readonly ICpuMetricsRepository repository;
-
-        public CpuMetricsController(ILogger<CpuMetricsController> logger,ICpuMetricsRepository repository)
+        private readonly IMapper _mapper;
+        public CpuMetricsController(ILogger<CpuMetricsController> logger,ICpuMetricsRepository repository,IMapper mapper)
         {
             this.repository=repository;
+            _mapper = mapper;
             _logger = logger;
             _logger.LogDebug(1, "NLog встроен в CpuMetricController");
         }
@@ -48,7 +50,7 @@ namespace MetricsAgent.Controllers
             };
             foreach (var metric in metrics)
             {
-                response.Metrics.Add(new CpuMetricDto { Time = metric.Time, Value = metric.Value, Id = metric.Id });
+                response.Metrics.Add(_mapper.Map<CpuMetricDto>(metric));
             }
             return Ok(response);
         }
@@ -63,7 +65,7 @@ namespace MetricsAgent.Controllers
             };
             foreach (var metric in metrics)
             {
-                response.Metrics.Add(new CpuMetricDto { Time = metric.Time, Value = metric.Value, Id = metric.Id });
+                response.Metrics.Add(_mapper.Map<CpuMetricDto>(metric));
             }
             return Ok(response);
         }
